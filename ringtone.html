@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+=============================================================
+  RINGTONE DELIVERY PAGE
+=============================================================
+
+HOW TO USE:
+  1. Upload this file to your GitHub Pages repository
+     alongside your mp3 file
+  2. Set the two variables below:
+     - RINGTONE_URL: path to your mp3 file
+     - RINGTONE_NAME: display name shown on the page
+  3. Share the URL to this page with anyone you like
+  4. They tap "Get Ringtone" in Safari on their iPhone
+  5. iOS share sheet appears — including "Use as Ringtone"
+
+NOTES:
+  - Must be opened in Safari on iOS for best results
+  - Requires an internet connection to fetch the mp3
+  - The mp3 file must be in the same repository or
+    accessible via HTTPS
+
+=============================================================
+-->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+  <title>Get Ringtone</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #0d0d0d;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      width: 88%;
+      max-width: 340px;
+      background: #1c1c1e;
+      border-radius: 18px;
+      padding: 40px 28px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      text-align: center;
+    }
+
+    .icon {
+      width: 72px;
+      height: 72px;
+      background: #2f5d77;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #8e8e93;
+      line-height: 1.5;
+    }
+
+    #getBtn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 16px;
+      background: #2f5d77;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #getBtn:active { transform: scale(0.97); opacity: 0.85; }
+    #getBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #status {
+      font-size: 13px;
+      color: #8e8e93;
+      min-height: 18px;
+      transition: opacity 0.3s;
+    }
+
+    .warning {
+      font-size: 12px;
+      color: #636366;
+      line-height: 1.5;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">&#127925;</div>
+    <div class="title" id="ringtoneName">Loading...</div>
+    <div class="subtitle">Tap the button below to add this ringtone to your iPhone.</div>
+    <button id="getBtn" disabled>Get Ringtone</button>
+    <div id="status"></div>
+    <div class="warning">Open this page in Safari on your iPhone for best results.</div>
+  </div>
+
+  <script>
+    /* =============================================================
+       CONFIGURATION — update these two lines
+       ============================================================= */
+    var RINGTONE_URL  = 'Shut-up_Mom.mp3';
+    var RINGTONE_NAME = 'Shut Up Mom';
+
+    /* =============================================================
+       PAGE SETUP
+       ============================================================= */
+    document.getElementById('ringtoneName').textContent = RINGTONE_NAME;
+
+    var btn    = document.getElementById('getBtn');
+    var status = document.getElementById('status');
+
+    function setStatus(msg) {
+      status.textContent = msg;
+    }
+
+    /* =============================================================
+       CHECK WEB SHARE API FILE SUPPORT
+       ============================================================= */
+    var canShareFiles = navigator.canShare && navigator.share;
+
+    if (!canShareFiles) {
+      setStatus('Web Share not supported in this browser. Try Safari on iOS.');
+      btn.textContent = 'Not supported';
+    } else {
+      btn.disabled = false;
+    }
+
+    /* =============================================================
+       FETCH MP3 AND TRIGGER NATIVE iOS SHARE SHEET
+       ============================================================= */
+    btn.addEventListener('click', function() {
+      btn.disabled = true;
+      btn.textContent = 'Loading...';
+      setStatus('Fetching audio file...');
+
+      fetch(RINGTONE_URL)
+        .then(function(response) {
+          if (!response.ok) throw new Error('Could not fetch file.');
+          return response.blob();
+        })
+        .then(function(blob) {
+          var file = new File([blob], RINGTONE_NAME + '.mp3', { type: 'audio/mpeg' });
+
+          if (!navigator.canShare({ files: [file] })) {
+            throw new Error('File sharing not supported on this device.');
+          }
+
+          setStatus('Opening share sheet...');
+
+          return navigator.share({
+            files: [file],
+            title: RINGTONE_NAME
+          });
+        })
+        .then(function() {
+          setStatus('Done! Check your ringtone settings.');
+          btn.textContent = 'Get Ringtone';
+          btn.disabled = false;
+        })
+        .catch(function(err) {
+          if (err.name === 'AbortError') {
+            setStatus('Cancelled.');
+          } else {
+            setStatus('Error: ' + err.message);
+          }
+          btn.textContent = 'Get Ringtone';
+          btn.disabled = false;
+        });
+    });
+  </script>
+</body>
+</html>
