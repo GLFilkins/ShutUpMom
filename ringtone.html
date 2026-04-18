@@ -167,7 +167,7 @@ NOTES:
           return response.blob();
         })
         .then(function(blob) {
-          var file = new File([blob], RINGTONE_NAME + '.mp3', { type: 'audio/mp4' });
+          var file = new File([blob], RINGTONE_NAME + '.mp3', { type: 'audio/mp3' });
 
           if (!navigator.canShare({ files: [file] })) {
             throw new Error('File sharing not supported on this device.');
